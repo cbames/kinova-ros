@@ -61,6 +61,8 @@ JacoAPI::JacoAPI(void)
 
     getAngularForce = (int (*)(AngularPosition &))checkApiInit(usbLib, "GetAngularForce");
 
+    getAngularForceGravityFree = (int (*)(AngularPosition &))checkApiInit(usbLib, "GetAngularForceGravityFree");
+
     getAngularCurrent = (int (*)(AngularPosition &))checkApiInit(usbLib, "GetAngularCurrent");
 
     getActualTrajectoryInfo = (int (*)(TrajectoryPoint &))checkApiInit(usbLib, "GetActualTrajectoryInfo");

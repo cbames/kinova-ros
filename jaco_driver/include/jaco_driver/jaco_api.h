@@ -55,6 +55,7 @@ class JacoAPI
     int (*startForceControl)();
     int (*stopForceControl)();
     int (*getAngularForce)(AngularPosition &);
+    int (*getAngularForceGravityFree) (AngularPosition &);
     int (*getAngularCurrent)(AngularPosition &);
     int (*getControlType)(int &);
     int (*getActualTrajectoryInfo)(TrajectoryPoint &);

@@ -11,7 +11,7 @@ import sys
 
 
 def pose_client():
-    client = actionlib.SimpleActionClient('/jaco/finger_joint_angles', jaco_msgs.msg.SetFingersPositionAction)
+    client = actionlib.SimpleActionClient('/jaco_arm_driver/fingers/finger_positions', jaco_msgs.msg.SetFingersPositionAction)
 
     goal = jaco_msgs.msg.SetFingersPositionGoal()
 

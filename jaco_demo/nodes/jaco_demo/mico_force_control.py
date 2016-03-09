@@ -12,16 +12,16 @@ from jaco_msgs.srv     import SetForceControlParams, SetForceControlParamsReques
 
 rospy.init_node("force_control")
 
-robot     = rospy.get_param("robot", "mico")
+robot     = rospy.get_param("robot", "jaco")
 
-inertia_lin   = rospy.get_param("inertia_lin",    10.0)
-inertia_ang   = rospy.get_param("inertia_ang",     3.0)
-damping_lin   = rospy.get_param("damping_lin",    80.0)
-damping_ang   = rospy.get_param("damping_ang",    10.0)
-force_min_lin = rospy.get_param("force_min_lin",   0.1)
-force_min_ang = rospy.get_param("force_min_ang",   0.1)
-force_max_lin = rospy.get_param("force_max_lin",  40.0)
-force_max_ang = rospy.get_param("force_max_ang",  40.0)
+inertia_lin   = rospy.get_param("inertia_lin",    -15.0)
+inertia_ang   = rospy.get_param("inertia_ang",     -15.0)
+damping_lin   = rospy.get_param("damping_lin",    2.0)
+damping_ang   = rospy.get_param("damping_ang",    2.0)
+force_min_lin = rospy.get_param("force_min_lin",   0.005)
+force_min_ang = rospy.get_param("force_min_ang",   0.005)
+force_max_lin = rospy.get_param("force_max_lin",  0.5)
+force_max_ang = rospy.get_param("force_max_ang",  0.5)
 
 srv_start = rospy.ServiceProxy(robot + "_arm_driver/in/start_force_control",      Start)
 srv_stop  = rospy.ServiceProxy(robot + "_arm_driver/in/stop_force_control",       Stop)

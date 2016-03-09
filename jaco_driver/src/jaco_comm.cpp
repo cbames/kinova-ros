@@ -564,6 +564,7 @@ void JacoComm::getJointTorques(JacoAngles &tqs)
     memset(&jaco_tqs, 0, sizeof(jaco_tqs));  // zero structure
 
     int result = jaco_api_.getAngularForce(jaco_tqs);
+    //int result = jaco_api_.getAngularForceGravityFree(jaco_tqs);
     if (result != NO_ERROR_KINOVA)
     {
         throw JacoCommException("Could not get the joint torques", result);
@@ -655,6 +656,22 @@ void JacoComm::setCartesianForceMinMax(const CartesianInfo &min, const Cartesian
         throw JacoCommException("Could not set cartesian min/max force.", result);
     }
 }
+
+// /*!
+//  * \brief set the actuator PID implimented by Ben and Barrett.
+//  */
+
+// // HACK
+// void JacoComm::setActuatorPID(unsigned int address, float p, float i, float d )
+// {
+//     boost::recursive_mutex::scoped_lock lock(api_mutex_);
+//     int result = jaco_api_.SetActuatorPID(address, p, i, d);
+//     if (result != NO_ERROR_KINOVA)
+//     {
+//         throw JacoCommException("Could not set actuator PID.", result);
+//     }
+// }
+
 
 /*!
  * \brief Start cartesian force control.
