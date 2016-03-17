@@ -1,0 +1,4 @@
+<launch>
+	<param name="robot_description" textfile="$(find kinova_description)/urdf/jaco2.urdf"/>
+</launch>
+
