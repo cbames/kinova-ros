@@ -2,6 +2,8 @@
 #include <kinova/KinovaTypes.h>
 #include <kinova/Kinova.API.UsbCommandLayerUbuntu.h>
 #include <sstream>
+#include <string.h>
+#include <iostream>
 
 using namespace kinova_robot;
 
@@ -150,7 +152,7 @@ void KinovaRobot::setupRobot(int type)
             j6_angle_offset_ = 270.0;
             break;
         case 3: // JACO r2
-            robot_name_      = "jaco";
+            robot_name_      = "jaco2";
             num_joints_      = 9;
             num_fingers_     = 3;
             j6_angle_offset_ = 260.0; // TODO: confirm this.
@@ -160,6 +162,14 @@ void KinovaRobot::setupRobot(int type)
             throw KinovaException("Unknown device type");
             break;
     };
+
+    force_[0] = 0.0;
+    force_[1] = 0.0;
+    force_[2] = 0.0;
+
+    torque_[0]=0.0;
+    torque_[1]=0.0;
+    torque_[2]=0.0;
 }
 
 void KinovaRobot::updateState()
@@ -167,6 +177,8 @@ void KinovaRobot::updateState()
     AngularPosition ap_p;
     AngularPosition ap_v;
     AngularPosition ap_t;
+    CartesianPosition cartesian_force;
+    memset(&cartesian_force, 0, sizeof(cartesian_force)); 
 
     if (GetAngularPosition(ap_p) != NO_ERROR_KINOVA) {
         throw KinovaException("Could not get joint angles.");
@@ -176,6 +188,9 @@ void KinovaRobot::updateState()
     }
     if (GetAngularForce(ap_t) != NO_ERROR_KINOVA) {
         throw KinovaException("Could not get joint torques.");
+    }
+    if (GetCartesianForce(cartesian_force) != NO_ERROR_KINOVA) {
+        throw KinovaException("Could not get tool tip force/torque.");
     }
 
     AngularInfo& q  = ap_p.Actuators;
@@ -200,12 +215,20 @@ void KinovaRobot::updateState()
     state_.velocity[4] = deg2rad(kindeg(qd.Actuator5));
     state_.velocity[5] = deg2rad(kindeg(qd.Actuator6));
 
-    state_.torque[0] = qd.Actuator1;
-    state_.torque[1] = qd.Actuator2;
-    state_.torque[2] = qd.Actuator3;
-    state_.torque[3] = qd.Actuator4;
-    state_.torque[4] = qd.Actuator5;
-    state_.torque[5] = qd.Actuator6;
+    state_.torque[0] = tq.Actuator1;
+    state_.torque[1] = tq.Actuator2;
+    state_.torque[2] = tq.Actuator3;
+    state_.torque[3] = tq.Actuator4;
+    state_.torque[4] = tq.Actuator5;
+    state_.torque[5] = tq.Actuator6;
+
+    force_[0] = cartesian_force.Coordinates.X;
+    force_[1] = cartesian_force.Coordinates.Y;
+    force_[2] = cartesian_force.Coordinates.Z;
+
+    torque_[0] = cartesian_force.Coordinates.ThetaX;
+    torque_[1] = cartesian_force.Coordinates.ThetaY;
+    torque_[2] = cartesian_force.Coordinates.ThetaZ;
 
     // TODO: Full (or at least) partial finger state:
     for (int i = 6; i < numJoints(); ++i) {

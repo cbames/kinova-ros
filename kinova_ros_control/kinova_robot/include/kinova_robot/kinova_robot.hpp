@@ -65,6 +65,8 @@ namespace kinova_robot
         RobotState  state_;
         StateVector cur_cmd_;           // In position only!
         StateVector last_cmd_;
+        double torque_[3]; 
+        double force_[3];
 
         int         num_joints_;
         int         num_fingers_;
@@ -101,6 +103,12 @@ namespace kinova_robot
 
         /// \brief Return the current full state of the robot.
         const RobotState& state() const { return state_; }
+
+        /// \brief Return the current force for the tooltip of the robot.
+        const double* force() const {return force_;}
+
+        /// \brief Return the current torque for the tooltip of the robot.
+        const double* torque() const {return torque_;}
 
         /// \brief Set the position control point for the robot.
         ///

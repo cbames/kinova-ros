@@ -3,6 +3,7 @@
 
 #include <hardware_interface/joint_state_interface.h>
 #include <hardware_interface/joint_command_interface.h>
+#include <hardware_interface/force_torque_sensor_interface.h>
 #include <hardware_interface/robot_hw.h>
 #include <boost/scoped_ptr.hpp>
 #include <ros/ros.h>
@@ -53,6 +54,10 @@ namespace kinova_ros_ctrl
 
         hardware_interface::JointStateInterface      jsi_;
         hardware_interface::PositionJointInterface   pji_;
+        hardware_interface::ForceTorqueSensorInterface force_torque_sensor_interface_; 
+
+        double hand_force_[3];
+        double hand_torque_[3];
 
         std::vector<double>                          cmd_;
 

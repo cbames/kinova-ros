@@ -1,5 +1,6 @@
 #include <kinova_ros_ctrl/kinova_hardware_interface.hpp>
 #include <kinova_robot/kinova_robot.hpp>
+#include <iostream>
 
 using namespace kinova_ros_ctrl;
 using namespace kinova_robot;
@@ -47,6 +48,13 @@ KinovaHardwareInterface::KinovaHardwareInterface(ros::NodeHandle& n,
     registerInterface(&jsi_); // From RobotHW base class.
     registerInterface(&pji_); // From RobotHW base class.
 
+    hardware_interface::ForceTorqueSensorHandle hand_force_torque_handle("hand_ft_sensor", "jaco2_api_origin", hand_force_, hand_torque_);
+    force_torque_sensor_interface_.registerHandle(hand_force_torque_handle);
+    registerInterface(&force_torque_sensor_interface_);
+
+
+
+
 }
 
 KinovaHardwareInterface::~KinovaHardwareInterface()
@@ -57,6 +65,13 @@ void KinovaHardwareInterface::read()
 {
     if (robot_) {
         robot_->updateState();
+        hand_force_[0] = robot_->force()[0];
+        hand_force_[1] = robot_->force()[1];
+        hand_force_[2] = robot_->force()[2];
+
+        hand_torque_[0] = robot_->torque()[0];
+        hand_torque_[1] = robot_->torque()[1];
+        hand_torque_[2] = robot_->torque()[2];
         // Copy current position over command vector, command points will
         // overwrite them for the controlled joints.
         cmd_ = robot_->state().position;
