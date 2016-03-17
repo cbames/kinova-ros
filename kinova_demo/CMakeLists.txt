@@ -18,6 +18,21 @@ find_package(catkin REQUIRED COMPONENTS
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
 catkin_python_setup()
 
+## Generate actions in the 'action' folder
+ add_action_files(
+   DIRECTORY
+    action
+   FILES
+    Force.action
+ )
+
+## Generate added messages and services with any dependencies listed here
+generate_messages(
+   DEPENDENCIES
+   geometry_msgs sensor_msgs actionlib_msgs
+
+)
+
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -33,6 +48,8 @@ catkin_package(
   CATKIN_DEPENDS kinova_driver kinova_msgs roscpp rospy std_msgs geometry_msgs
 #  DEPENDS system_lib
 )
+
+
 
 ###########
 ## Build ##
@@ -55,5 +72,8 @@ install(PROGRAMS
   nodes/kinova_demo/cartesian_workout.py
   nodes/kinova_demo/grip_workout.py
   nodes/kinova_demo/joint_angle_workout.py
+  nodes/handshake_control/force_control.py
+  nodes/handshake_control/force_server.py
+  nodes/handshake_control/force_client.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

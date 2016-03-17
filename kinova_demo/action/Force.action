@@ -1,0 +1,13 @@
+# define the goal
+
+# reference wrench
+geometry_msgs/WrenchStamped wrench
+
+---
+# feedback
+float32[6] residual
+float32 squared_residual
+
+---
+# result
+bool success
