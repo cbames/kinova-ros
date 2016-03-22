@@ -3,7 +3,7 @@ joint_state_controller:
 
     publish_rate: 50
 
-jaco2_controller:
+jaco_controller:
     type: effort_controllers/JointTrajectoryController
 
     joints:

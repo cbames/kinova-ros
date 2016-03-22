@@ -22,15 +22,25 @@ class ee_cart(object):
 
     def joint_state_cb(self,data):
         
-        jnt_pos = kdl.JntArray(self.chain.getNrOfJoints())
+        q = kdl.JntArray(self.chain.getNrOfJoints())
+        q_d = kdl.JntArray(self.chain.getNrOfJoints())
+        q_dd = kdl.JntArray(self.chain.getNrOfJoints())
+        jnt_taugc = kdl.JntArray(self.chain.getNrOfJoints())
+
+        jnt_wrenches = kdl.Wrenches
+
 
         for i in range(6):
-            jnt_pos[i] = data.position[i]
+            q[i] = data.position[i]
+            q_d[i] = 0 
+            q_dd[i] = 0 
 
-        print("jnt_pos",jnt_pos)
+
+
+        print("q",q)
 
         jacobian =  kdl.Jacobian(self.chain.getNrOfJoints())
-        self.jnt_to_jac.JntToJac(jnt_pos, jacobian)
+        self.jnt_to_jac.JntToJac(q, jacobian)
         np_jacobian = self.jac_to_np(jacobian)
 
         joint_efforts =np.mat(data.effort[0:6]).T
@@ -38,7 +48,12 @@ class ee_cart(object):
         print("joint_efforts:", joint_efforts)
         print("np_jacobian:", np_jacobian)
 
-        cart_force = np_jacobian*joint_efforts
+        ret = self.gcSolver.CartToJnt(q, qd, qdd, jnt_wrenches,jnt_taugc);
+        if (ret < 0):
+            rospy.logwarn("KDL: inverse dynamics ERROR")
+
+
+        cart_force = np.linalg.pinv(np_jacobian.T)*joint_efforts
 
 
         wrench = WrenchStamped()
@@ -48,13 +63,13 @@ class ee_cart(object):
         wrench.wrench.force.y = cart_force[1]
         wrench.wrench.force.z = cart_force[2]
 
-        transformed_wrench = self.transform_force(wrench.wrench, "jaco2_link_hand")
+       # transformed_wrench = self.transform_force(wrench.wrench, "jaco2_link_hand")
 
-        wrench.wrench.force.x = transformed_wrench[0]
-        wrench.wrench.force.y = transformed_wrench[1]
-        wrench.wrench.force.z = transformed_wrench[2]
+        #wrench.wrench.force.x = transformed_wrench[0]
+        #wrench.wrench.force.y = transformed_wrench[1]
+        #wrench.wrench.force.z = transformed_wrench[2]
 
-        wrench.header.frame_id="jaco2_api_origin"
+        #wrench.header.frame_id="jaco2_api_origin"
 
 
         self.ee_cart_pub.publish(wrench)
@@ -83,10 +98,13 @@ class ee_cart(object):
         tip = "jaco2_link_hand"
         
         self.base_frame = 'jaco2_api_origin'
+        gravity = kdl.Vector(0.0,0.0,-9.81)
 
         tree = kdl_tree_from_urdf_model(robot)
         self.chain = tree.getChain(root, tip)
         self.jnt_to_jac = kdl.ChainJntToJacSolver(self.chain)  
+        self.gcSolver = kdl.ChainIdSolver_RNE(self.chain, gravity);
+
         self.listener = TransformListener(True, rospy.Duration(2))
 
 

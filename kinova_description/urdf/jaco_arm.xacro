@@ -165,6 +165,8 @@
   <property name="link_end_effector"   value="jaco_end_effector" />
   <property name="end_effector_offset" value="0.1687" />
 
+
+
   <xacro:macro name="jaco_arm" params="parent">
     <xacro:jaco_struct parent="${parent}" basename="jaco"/>
 

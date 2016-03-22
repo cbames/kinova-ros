@@ -177,11 +177,32 @@
          -->
         </link>
 
-        <joint name="${link_hand}_to_end_effector" type="fixed">
+        <joint name="${link_hand}_to_end_effector" type="revolute">
           <parent link="${link_hand}"/>
           <child link="${link_end_effector}"/>
           <origin xyz="0 0 -${end_effector_offset}" rpy="0 ${J_PI} 0" />
+          <limit effort="30" velocity="0.01" lower="-0.01" upper="0.01"/>
         </joint>
+        <gazebo reference="${link_hand}_to_end_effector">
+          <provideFeedback>true</provideFeedback>
+          <!-- FIXME: This sensor tag is never included in the sdf -->
+          <sensor name="force_torque_sensor" type="force_torque">
+            <always_on>1</always_on>
+            <update_rate>100.0</update_rate>
+            <visualize>1</visualize>
+            <force_torque name="ft_sensor">
+              <frame>child</frame>
+            </force_torque>
+          </sensor>
+          <!-- *************************************************** -->
+        </gazebo>
+        <gazebo>
+          <plugin filename="libgazebo_ros_ft_sensor.so" name="ft_sensor">
+            <updateRate>100.0</updateRate>
+            <topicName>ft_sensor</topicName>
+            <jointName>${link_hand}_to_end_effector</jointName>
+          </plugin>
+        </gazebo>
         <link name="${link_end_effector}" />
 
         <gazebo reference="${link_base}">

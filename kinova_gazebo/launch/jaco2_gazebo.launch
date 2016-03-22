@@ -22,7 +22,7 @@
     <node name="controller_spawner"
            pkg="controller_manager"
           type="spawner"
-          args="joint_state_controller jaco2_controller jaco2_gripper_controller"
+          args="joint_state_controller jaco_controller jaco2_gripper_controller"
     />
 
 </launch>

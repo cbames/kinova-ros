@@ -9,9 +9,13 @@ find_package(catkin REQUIRED COMPONENTS
   kinova_msgs
   std_msgs
   geometry_msgs
+  sensor_msgs
+  kdl_parser
   roscpp
   rospy
 )
+find_package(cmake_modules REQUIRED)
+find_package(Eigen REQUIRED)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -49,8 +53,6 @@ catkin_package(
 #  DEPENDS system_lib
 )
 
-
-
 ###########
 ## Build ##
 ###########
@@ -60,7 +62,12 @@ catkin_package(
 # include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  ${Eigen_INCLUDE_DIRS}
 )
+message("${Eigen_INCLUDE_DIRS}")
+
+add_executable(gravity_compensation src/kdl_gravity_comp.cpp)
+target_link_libraries(gravity_compensation ${catkin_LIBRARIES})
 
 #############
 ## Install ##
