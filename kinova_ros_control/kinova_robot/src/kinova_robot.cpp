@@ -186,7 +186,7 @@ void KinovaRobot::updateState()
     if (GetAngularVelocity(ap_v) != NO_ERROR_KINOVA) {
         throw KinovaException("Could not get joint velocities.");
     }
-    if (GetAngularForce(ap_t) != NO_ERROR_KINOVA) {
+    if (GetAngularForceGravityFree(ap_t) != NO_ERROR_KINOVA) {
         throw KinovaException("Could not get joint torques.");
     }
     if (GetCartesianForce(cartesian_force) != NO_ERROR_KINOVA) {

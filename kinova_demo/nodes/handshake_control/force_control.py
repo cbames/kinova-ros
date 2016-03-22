@@ -31,7 +31,7 @@ class ForceControl:
         self.goal = np.mat(np.zeros(6)).T
         self.error = np.mat(np.zeros(6)).T
         self.jnt_to_jac = kdl.ChainJntToJacSolver(self.chain)
-        self.k = 0.04#159
+        self.k = 0.004#159
 
     def update_jnts(self, data):
         i = 0
@@ -45,22 +45,22 @@ class ForceControl:
     def update_error(self, wrench):
         # yay numpy!
         self.error = self.goal - wrench
-        print '---goal---'
-        print self.goal
-        print '---input---'
-        print wrench
-        print '---error---'
-        print self.error
+        # print '---goal---'
+        # print self.goal
+        # print '---input---'
+        # print wrench
+        # print '---error---'
+        # print self.error
 
         return np.dot(self.error.T, self.error)
 
     def set_goal(self, goal):
         #self.goal = deepcopy(goal)
-        print("setting goal:", goal)
+        #print("setting goal:", goal)
         self.fk.JntToCart(self.jnt_pos, self.pos)
 
     def update_goal(self, goal):
-        print("updating goal:", goal)
+        #print("updating goal:", goal)
         self.goal = deepcopy(goal)
 
     # convert kdl data to numpy to make it easier to use
@@ -96,7 +96,7 @@ class ForceControl:
         #jac_t = npj.T
         jac_t = np.linalg.pinv(npj)
         deltas = self.k*jac_t*self.error
-        print("joint_deltas:",deltas)
+        #print("joint_deltas:",deltas)
         #return np.linalg.pinv(cj)*error# + ns*deltas
 
         return deltas
