@@ -29,8 +29,8 @@ class ForceServer:
         """
         robot = URDF.from_parameter_server()
 
-        self.base_frame = 'jaco2_link_base'
-        self.tip_frame = 'jaco2_link_hand'
+        self.base_frame = 'jaco2_api_origin'
+        self.tip_frame = 'jaco2_end_effector'
         self.control = ForceControl(self.base_frame, self.tip_frame, robot)
 
         self.name_position_dict = {}

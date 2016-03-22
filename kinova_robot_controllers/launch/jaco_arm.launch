@@ -15,10 +15,10 @@
     <rosparam>
         force_torque_sensor_controller:
             type: force_torque_sensor_controller/ForceTorqueSensorController
-            publish_rate: 50
+            publish_rate: 100
         joint_state_controller:
             type:         joint_state_controller/JointStateController
-            publish_rate: 50
+            publish_rate: 100
         # Joint Trajectory Controller:
         jaco_controller:
             type: position_controllers/JointTrajectoryController
