@@ -1,0 +1,19 @@
+require 'csvigo'
+require 'nn'
+loaded = csvigo.load({path = "jaco_fk.data", mode = "large"})
+dataset = {}
+function dataset:size() return 15000 end
+for i=1,dataset.size() do
+  dataset[i] = { torch.Tensor({loaded[i][7],loaded[i][8],loaded[i][9],loaded[i][10],loaded[i][11],loaded[i][12],loaded[i][13]}), torch.Tensor({loaded[i][1],loaded[i][2],loaded[i][3],loaded[i][4],loaded[i][5],loaded[i][6]})}
+end
+
+model = nn.Sequential()
+model:add(nn.Linear(7,20))
+model:add(nn.Tanh())
+model:add(nn.Tanh())
+model:add(nn.Linear(20,6))
+criterion = nn.MSECriterion()
+trainer = nn.StochasticGradient(model, criterion)
+trainer.learningRate = 0.01
+trainer.maxIteration = 10000
+trainer:train(dataset)

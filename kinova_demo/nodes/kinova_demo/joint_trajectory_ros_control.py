@@ -30,7 +30,7 @@ def joint_angle_client(angle_set):
    # -1.6391335729986558, -1.7843264524686953, 0.8922353978998888, -1.1923773811773648, 1.6921760187458763, 3.3914919723742556
 
     goal.goal.trajectory.points.append(trajectory_msgs.msg.JointTrajectoryPoint())
-    goal.goal.trajectory.points[0].positions = [-1.6391335729986558, -1.7843264524686953, 0.8922353978998888, -1.1923773811773648, 1.6921760187458763, 3.1914919723742556]
+    goal.goal.trajectory.points[0].positions = angle_set# [-1.6391335729986558, -1.7843264524686953, 0.8922353978998888, -1.1923773811773648, 1.6921760187458763, 3.1914919723742556]
     goal.goal.trajectory.points[0].time_from_start.secs = 1.0
     #goal.goal.trajectory.points[0].velocities = [ 0, 0, 0, 0, 0, 0]
     #goal.goal.trajectory.points[0].accelerations = [ 0, 0, 0, 0, 0, 0]
