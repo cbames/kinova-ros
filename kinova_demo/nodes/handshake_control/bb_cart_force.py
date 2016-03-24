@@ -23,17 +23,12 @@ class ee_cart(object):
     def joint_state_cb(self,data):
         
         q = kdl.JntArray(self.chain.getNrOfJoints())
-        q_d = kdl.JntArray(self.chain.getNrOfJoints())
-        q_dd = kdl.JntArray(self.chain.getNrOfJoints())
-        jnt_taugc = kdl.JntArray(self.chain.getNrOfJoints())
 
-        jnt_wrenches = kdl.Wrenches
 
 
         for i in range(6):
             q[i] = data.position[i]
-            q_d[i] = 0 
-            q_dd[i] = 0 
+
 
 
 
@@ -48,9 +43,7 @@ class ee_cart(object):
         print("joint_efforts:", joint_efforts)
         print("np_jacobian:", np_jacobian)
 
-        ret = self.gcSolver.CartToJnt(q, qd, qdd, jnt_wrenches,jnt_taugc);
-        if (ret < 0):
-            rospy.logwarn("KDL: inverse dynamics ERROR")
+
 
 
         cart_force = np.linalg.pinv(np_jacobian.T)*joint_efforts
@@ -103,7 +96,6 @@ class ee_cart(object):
         tree = kdl_tree_from_urdf_model(robot)
         self.chain = tree.getChain(root, tip)
         self.jnt_to_jac = kdl.ChainJntToJacSolver(self.chain)  
-        self.gcSolver = kdl.ChainIdSolver_RNE(self.chain, gravity);
 
         self.listener = TransformListener(True, rospy.Duration(2))
 
