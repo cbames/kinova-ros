@@ -9,6 +9,7 @@
 #include <urdf/model.h>
 #include <kdl/chain.hpp>
 #include <std_msgs/Float64MultiArray.h>
+#include <std_msgs/Float64.h>
 #include <sensor_msgs/JointState.h>
 #include <kdl/chainidsolver_recursive_newton_euler.hpp>
 
@@ -43,11 +44,14 @@ void gcCallback(const sensor_msgs::JointState::ConstPtr& msg)
  std::cout << "ret:" << ret << std::endl; 
  if (ret < 0) ROS_ERROR("KDL: inverse dynamics ERROR");
  std_msgs::Float64MultiArray gc_torques; 
+ gc_torques.data.clear(); 
 
  for(int i=0; i<chain.getNrOfJoints(); i++)
  {
   std::cout << msg->name[i]<<":"<< tau_gc(i) << std::endl; 
-  gc_torques.data.push_back(tau_gc(i));
+  std_msgs::Float64 tau_gc_datum; 
+//tau_gc_datum.data = ;
+  gc_torques.data.push_back((double)tau_gc(i));
  }
  
  joint_efforts_gc.publish(gc_torques); 
