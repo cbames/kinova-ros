@@ -10,7 +10,7 @@ if __name__ == '__main__':
     ac = actionlib.SimpleActionClient('force_controller', ForceAction)
     ac.wait_for_server()
     goal = ForceGoal()
-    goal.wrench.wrench.force.x = 6
+    goal.wrench.wrench.force.x = 0
     goal.wrench.wrench.force.y = 0
     goal.wrench.wrench.force.z = 0
     goal.wrench.wrench.torque.x = 0

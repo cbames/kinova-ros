@@ -225,9 +225,9 @@ class ForceServer:
             # check for convergence
             err = self.control.update_error(self.wrench_at_tip)
             print 'Current Error Mag.: ' + str(np.sqrt(err))
-            if np.sqrt(err) < 1:
-                self.state = ForceControl.CONVERGED
-                return
+            #if np.sqrt(err) < 1:
+            #    self.state = ForceControl.CONVERGED
+            #    return
             # compute joint deltas
             deltas = self.control.compute_jnt_deltas()
             # populate joint command and publish

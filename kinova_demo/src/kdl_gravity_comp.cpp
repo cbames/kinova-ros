@@ -34,7 +34,7 @@ void gcCallback(const sensor_msgs::JointState::ConstPtr& msg)
   for(int i=0; i<chain.getNrOfJoints(); i++)
   {
    q(i) = msg->position[i]; 
-   qd(i) = msg->velocity[i]; 
+   qd(i) = 0.0; //msg->velocity[i]; 
    qdd(i) = 0.0; 
    external_wrenches.push_back(KDL::Wrench()); 
   }
@@ -46,12 +46,14 @@ void gcCallback(const sensor_msgs::JointState::ConstPtr& msg)
  std_msgs::Float64MultiArray gc_torques; 
  gc_torques.data.clear(); 
 
+ double sign[] = {1.0,-1.0,1.0,1.0,1.0,1.0};
+
  for(int i=0; i<chain.getNrOfJoints(); i++)
  {
   std::cout << msg->name[i]<<":"<< tau_gc(i) << std::endl; 
   std_msgs::Float64 tau_gc_datum; 
 //tau_gc_datum.data = ;
-  gc_torques.data.push_back((double)tau_gc(i));
+  gc_torques.data.push_back((double)(msg->velocity[i]+sign[i]*tau_gc(i)));
  }
  
  joint_efforts_gc.publish(gc_torques); 

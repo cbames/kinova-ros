@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   kdl_parser
   roscpp
   rospy
+  dmp
 )
 find_package(cmake_modules REQUIRED)
 find_package(Eigen REQUIRED)

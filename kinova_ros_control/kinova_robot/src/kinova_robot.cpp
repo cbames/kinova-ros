@@ -183,13 +183,13 @@ void KinovaRobot::updateState()
     if (GetAngularPosition(ap_p) != NO_ERROR_KINOVA) {
         throw KinovaException("Could not get joint angles.");
     }
-/*    if (GetAngularVelocity(ap_v) != NO_ERROR_KINOVA) {
+    if (GetAngularVelocity(ap_v) != NO_ERROR_KINOVA) {
         throw KinovaException("Could not get joint velocities.");
-    }*/
+    }
     // HACK for comparing gravity compensations putting raw values in velocity....
-    if (GetAngularForce(ap_v) != NO_ERROR_KINOVA) {
-        throw KinovaException("Could not get joint velocities.");
-    }   
+    // if (GetAngularForce(ap_v) != NO_ERROR_KINOVA) {
+    //     throw KinovaException("Could not get joint velocities.");
+    // }   
     if (GetAngularForceGravityFree(ap_t) != NO_ERROR_KINOVA) {
         throw KinovaException("Could not get joint torques.");
     }
@@ -212,12 +212,12 @@ void KinovaRobot::updateState()
 
     // TODO: The need for 'kindeg' might be related to an API issue.
     //       Add a test for this.
-    state_.velocity[0] = ap_v.Actuators.Actuator1;//deg2rad(kindeg(qd.Actuator1));
-    state_.velocity[1] = ap_v.Actuators.Actuator2;//deg2rad(kindeg(qd.Actuator2));
-    state_.velocity[2] = ap_v.Actuators.Actuator3;//deg2rad(kindeg(qd.Actuator3));
-    state_.velocity[3] = ap_v.Actuators.Actuator4;//deg2rad(kindeg(qd.Actuator4));
-    state_.velocity[4] = ap_v.Actuators.Actuator5;//deg2rad(kindeg(qd.Actuator5));
-    state_.velocity[5] = ap_v.Actuators.Actuator6;//deg2rad(kindeg(qd.Actuator6));
+    state_.velocity[0] = deg2rad(kindeg(qd.Actuator1));
+    state_.velocity[1] = deg2rad(kindeg(qd.Actuator2));
+    state_.velocity[2] = deg2rad(kindeg(qd.Actuator3));
+    state_.velocity[3] = deg2rad(kindeg(qd.Actuator4));
+    state_.velocity[4] = deg2rad(kindeg(qd.Actuator5));
+    state_.velocity[5] = deg2rad(kindeg(qd.Actuator6));
 
     state_.torque[0] = tq.Actuator1;
     state_.torque[1] = tq.Actuator2;
