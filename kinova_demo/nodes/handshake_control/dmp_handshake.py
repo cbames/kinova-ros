@@ -64,10 +64,10 @@ if __name__ == '__main__':
 
     #Create a DMP from a 2-D trajectory
     dims = 9#2                
-    dt = 0.1                
-    K = 100                 
+    dt = 0.025                
+    K = 250                 
     D = 2.0 * np.sqrt(K)      
-    num_bases = 512          
+    num_bases = 10000          
     
     #np.genfromtxt("/home/ubuntu_ros/catkin_ws/src/jaco-ros/kinova_demo/nodes/handshake_control/ben_traj.txt",delimiter=",").tolist()
     #print [[1.0,1.0],[2.0,2.0],[3.0,4.0],[6.0,8.0]]
@@ -86,9 +86,10 @@ if __name__ == '__main__':
     seg_length = -1          #Plan until convergence to goal
     tau = resp.tau       #Desired plan should take twice as long as demo
     dt = 0.1
-    integrate_iter = 5       #dt is rather large, so this is > 1  
+    integrate_iter = 1       #dt is rather large, so this is > 1  
     plan = makePlanRequest(x_0, x_dot_0, t_0, goal, goal_thresh, 
                            seg_length, tau, dt, integrate_iter)
 
 
-    print plan
+    #print plan
+    print "done"
