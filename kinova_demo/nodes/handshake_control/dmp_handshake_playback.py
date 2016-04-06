@@ -13,60 +13,60 @@ import math
 import actionlib
 import control_msgs.msg 
 import trajectory_msgs.msg 
-from dmp.srv import *
-from dmp.msg import *
+#from dmp.srv import *
+#from dmp.msg import *
 
 #Learn a DMP from demonstration data
-def makeLFDRequest(dims, traj, dt, K_gain, 
-                   D_gain, num_bases):
-    demotraj = DMPTraj()
+# def makeLFDRequest(dims, traj, dt, K_gain, 
+#                    D_gain, num_bases):
+#     demotraj = DMPTraj()
         
-    for i in range(len(traj)):
-        pt = DMPPoint();
-        pt.positions = traj[i]
-        demotraj.points.append(pt)
-        demotraj.times.append(dt*i)
+#     for i in range(len(traj)):
+#         pt = DMPPoint();
+#         pt.positions = traj[i]
+#         demotraj.points.append(pt)
+#         demotraj.times.append(dt*i)
             
-    k_gains = [K_gain]*dims
-    d_gains = [D_gain]*dims
+#     k_gains = [K_gain]*dims
+#     d_gains = [D_gain]*dims
         
 
-    print demotraj
-    print "Starting LfD..."
-    rospy.wait_for_service('learn_dmp_from_demo')
-    try:
-        lfd = rospy.ServiceProxy('learn_dmp_from_demo', LearnDMPFromDemo)
-        resp = lfd(demotraj, k_gains, d_gains, num_bases)
-    except rospy.ServiceException, e:
-        print "Service call failed: %s"%e
-    print "LfD done"    
+#     print demotraj
+#     print "Starting LfD..."
+#     rospy.wait_for_service('learn_dmp_from_demo')
+#     try:
+#         lfd = rospy.ServiceProxy('learn_dmp_from_demo', LearnDMPFromDemo)
+#         resp = lfd(demotraj, k_gains, d_gains, num_bases)
+#     except rospy.ServiceException, e:
+#         print "Service call failed: %s"%e
+#     print "LfD done"    
             
-    return resp;
+#     return resp;
 
 
-#Set a DMP as active for planning
-def makeSetActiveRequest(dmp_list):
-    try:
-        sad = rospy.ServiceProxy('set_active_dmp', SetActiveDMP)
-        sad(dmp_list)
-    except rospy.ServiceException, e:
-        print "Service call failed: %s"%e
+# #Set a DMP as active for planning
+# def makeSetActiveRequest(dmp_list):
+#     try:
+#         sad = rospy.ServiceProxy('set_active_dmp', SetActiveDMP)
+#         sad(dmp_list)
+#     except rospy.ServiceException, e:
+#         print "Service call failed: %s"%e
 
 
-#Generate a plan from a DMP
-def makePlanRequest(x_0, x_dot_0, t_0, goal, goal_thresh, 
-                    seg_length, tau, dt, integrate_iter):
-    print "Starting DMP planning..."
-    rospy.wait_for_service('get_dmp_plan')
-    try:
-        gdp = rospy.ServiceProxy('get_dmp_plan', GetDMPPlan)
-        resp = gdp(x_0, x_dot_0, t_0, goal, goal_thresh, 
-                   seg_length, tau, dt, integrate_iter)
-    except rospy.ServiceException, e:
-        print "Service call failed: %s"%e
-    print "DMP planning done"   
+# #Generate a plan from a DMP
+# def makePlanRequest(x_0, x_dot_0, t_0, goal, goal_thresh, 
+#                     seg_length, tau, dt, integrate_iter):
+#     print "Starting DMP planning..."
+#     rospy.wait_for_service('get_dmp_plan')
+#     try:
+#         gdp = rospy.ServiceProxy('get_dmp_plan', GetDMPPlan)
+#         resp = gdp(x_0, x_dot_0, t_0, goal, goal_thresh, 
+#                    seg_length, tau, dt, integrate_iter)
+#     except rospy.ServiceException, e:
+#         print "Service call failed: %s"%e
+#     print "DMP planning done"   
             
-    return resp;
+#     return resp;
 
 
 # def joint_angle_client(angle_set, velocity_set):
@@ -143,16 +143,17 @@ if __name__ == '__main__':
 
     #for i in range(len(plan.plan.points)):
     for i in range(len(traj)):
-        dt = (i+1)*0.2
+        dt = (i+1)*0.3
         goal.goal.trajectory.points.append(trajectory_msgs.msg.JointTrajectoryPoint())
         goal.goal.trajectory.points[i].positions = traj[i][0:6]#plan.plan.points[i].positions[0:6]
+        goal.goal.trajectory.points[i].positions[1] = goal.goal.trajectory.points[i].positions[1] - .15
         goal.goal.trajectory.points[i].time_from_start = rospy.Duration(dt)
         #goal.goal.trajectory.points[i].velocities = plan.plan.points[i].velocities[0:6]
 
     print('goal: {}'.format(goal.goal))
 
     client.send_goal(goal.goal)
-    if client.wait_for_result(rospy.Duration(1.0)+goal.goal.trajectory.points[-1].time_from_start):
+    if client.wait_for_result(rospy.Duration(10)+goal.goal.trajectory.points[-1].time_from_start):
         print client.get_result()
     else:
         print('        the joint angle action timed-out')

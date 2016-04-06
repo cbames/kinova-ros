@@ -4,7 +4,7 @@ import rosbag
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import WrenchStamped
 
-bag = rosbag.Bag('/home/ubuntu_ros/handshake_demo/barrett_2016-03-04-14-08-57.bag')
+bag = rosbag.Bag('/home/ubuntu_ros/handshake_demo/ben-april-5.bag')
 
 target = open("ben_traj.txt", 'w')
 
