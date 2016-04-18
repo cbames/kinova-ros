@@ -93,9 +93,29 @@ class ForceControl:
         self.jnt_to_jac.JntToJac(self.jnt_pos, self.j)
         npj = self.jac_to_np(self.j)
         # yay numpy!
+        jac_pinv = None 
+
+        j_jT = np.dot(npj, npj.T)
+
+        print ("singularity check:",abs(np.linalg.det(j_jT)))
+
+        # singularity check 
+        if abs(np.linalg.det(j_jT)) > .005**2:
+            # if we're not near a singularity
+            jac_pinv = np.linalg.pinv(npj)
+        else:
+            # in the case that the robot is entering near singularity
+            u,s,v = np.linalg.svd(j_jT)
+            for i in range(len(s)):
+                if s[i] < .005: s[i] = 0
+                else: s[i] = 1.0
+                print ("s["+i+"]:", s[i])
+            jac_pinv = np.linalg.pinv(npj)*np.diag(s)
+
+
         #jac_t = npj.T
-        jac_t = np.linalg.pinv(npj)
-        deltas = self.k*jac_t*self.error
+        #jac_t = 
+        deltas = self.k*jac_pinv*self.error
         #print("joint_deltas:",deltas)
         #return np.linalg.pinv(cj)*error# + ns*deltas
 
