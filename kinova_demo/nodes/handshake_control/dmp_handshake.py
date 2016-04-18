@@ -66,8 +66,8 @@ if __name__ == '__main__':
     dims = 9#2                
     dt = 0.025                
     K = 250                 
-    D = 2.0 * np.sqrt(K)      
-    num_bases = 10000          
+    D =  np.sqrt(K)      
+    num_bases = 20000          
     
     #np.genfromtxt("/home/ubuntu_ros/catkin_ws/src/jaco-ros/kinova_demo/nodes/handshake_control/ben_traj.txt",delimiter=",").tolist()
     #print [[1.0,1.0],[2.0,2.0],[3.0,4.0],[6.0,8.0]]

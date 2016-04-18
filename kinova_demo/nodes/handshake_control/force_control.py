@@ -96,7 +96,8 @@ class ForceControl:
         #jac_t = npj.T
         jac_t = np.linalg.pinv(npj)
         deltas = self.k*jac_t*self.error
-        #print("joint_deltas:",deltas)
+        print("joint_deltas:",deltas)
+        print("error:", self.error)
         #return np.linalg.pinv(cj)*error# + ns*deltas
 
         return deltas

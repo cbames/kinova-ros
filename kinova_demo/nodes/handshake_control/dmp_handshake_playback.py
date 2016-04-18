@@ -109,9 +109,9 @@ if __name__ == '__main__':
     goal = [1.58523372254,0.426514835956,-2.06937017658,-1.74572979142,3.11422281444,3.14,-0.00251327412287,-0.00251327412287,-0.0]         #Plan to a different goal than demo
     goal_thresh = [0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]
     seg_length = -1          #Plan until convergence to goal
-    tau = 1.0       #Desired plan should take twice as long as demo
+    tau = 8       #Desired plan should take twice as long as demo
     dt = 0.025
-    integrate_iter = 5       #dt is rather large, so this is > 1  
+    integrate_iter = 1       #dt is rather large, so this is > 1  
     plan = makePlanRequest(x_0, x_dot_0, t_0, goal, goal_thresh, 
                            seg_length, tau, dt, integrate_iter)
 
@@ -133,7 +133,7 @@ if __name__ == '__main__':
     
     for i in range(len(plan.plan.points)):
     #for i in range(len(traj)):
-        dt = (i+2)*0.3
+        dt = (i+2)*0.025
         goal.goal.trajectory.points.append(trajectory_msgs.msg.JointTrajectoryPoint())
         goal.goal.trajectory.points[i].positions = list(plan.plan.points[i].positions[0:6])#traj[i][0:6]
         goal.goal.trajectory.points[i].positions[1] = goal.goal.trajectory.points[i].positions[1] - .15
