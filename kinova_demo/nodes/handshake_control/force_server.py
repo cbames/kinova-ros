@@ -35,6 +35,7 @@ class ForceServer:
 
         self.name_position_dict = {}
         self.jnt_st_name_position = {}
+        self.jnt_st_name_velocity = {}
         self.ac_name = 'force_controller'
 
         self.action_server = actionlib.SimpleActionServer(self.ac_name, ForceAction, auto_start=False)
@@ -53,7 +54,7 @@ class ForceServer:
         #self.pub_joint_deltas = rospy.Publisher('/joint_refs', LabeledJointTrajectory, queue_size=1)
         
         # Need to listen to DMP for force 
-        self.pub_goal = rospy.Publisher('/goal_at_control', WrenchStamped, queue_size=1)
+        self.pub_goal = rospy.Publisher('/goal_at_control', WrenchStamped, queue_size=1, tcp_nodelay=True)
         
         
         self.listener = TransformListener(True, rospy.Duration(2))
@@ -100,9 +101,18 @@ class ForceServer:
         
         # Create dictionary of joint name to desired joint position
         names_positions = zip(data.name, data.position) 
+        names_velocities = zip(data.name, data.velocity)
+
         self.jnt_st_name_position = {}
+        #self.jnt_st_name_velocity = {}
+        
         for name, position in names_positions:
             self.jnt_st_name_position[name] = position
+
+        for name, velocity in names_velocities:
+            self.jnt_st_name_velocity[name] = velocity
+
+        #print "velocity:", self.jnt_st_name_velocity
 
         # update only the joints we care about
         current_pos = list()
@@ -118,6 +128,8 @@ class ForceServer:
         arm = self.transform_force(data.wrench, data.header.frame_id)
         arm_t = self.transform_torque(data.wrench, data.header.frame_id)
         
+        threshold = 6
+        t_thresh  = 4 
         #print("arm:",arm)
         #This is visualization stuff which we might need for debugging purposes
         # tip = WrenchStamped()
@@ -127,7 +139,29 @@ class ForceServer:
         # tip.wrench.torque = Vector3((arm_t[0, 0]), (arm_t[1, 0]), (arm_t[2, 0]))
         # self.pub_wrench_at_tip.publish(tip)
         #self.wrench_at_tip = np.mat([[tip.wrench.force.x], [tip.wrench.force.y], [tip.wrench.force.z], [0], [0], [0]])
-        self.wrench_at_tip = np.mat( [ [arm[0, 0]], [arm[1, 0]], [arm[2,0]], [0], [0], [0]])
+        for i in range(len(arm[:,0])): 
+            f = arm[i,0]
+            f_new = f - np.sign(f)*threshold 
+            if np.sign(f_new) != np.sign(f):
+                f = 0 
+            else: 
+                f = f_new
+            arm[i,0] = f
+
+        for i in range(len(arm_t[:,0])): 
+            t = arm_t[i,0]
+            t_new = t - np.sign(t)*t_thresh 
+            if np.sign(t_new) != np.sign(t):
+                t = 0 
+            else: 
+                t = t_new
+            arm_t[i,0] = t
+
+
+
+        self.wrench_at_tip = np.mat( [ [arm[0, 0]], [arm[1, 0]], [arm[2,0]], [arm_t[0, 0]], [arm_t[1, 0]], [arm_t[2,0]]])
+
+        #print "wrench at tip:", self.wrench_at_tip
 
     def transform_force(self, wrench, frame):
         # need to transform force data to the correct frame (tip of chain)
@@ -183,20 +217,21 @@ class ForceServer:
         goal = control_msgs.msg.FollowJointTrajectoryActionGoal()
 
         goal.goal_id = 'test'
-
+        goal.header.stamp = rospy.Time.now()+ rospy.Duration(0.02)
         goal.goal.trajectory.points.append(JointTrajectoryPoint())
         #goal.goal.trajectory.joint_names = []
         #goal.goal.trajectory.points[0].positions = []
 
         #print("deltas:",deltas)
-
+        #print "velocity:",self.jnt_st_name_velocity
         for i in range(len(self.names)):
          if self.names[i] in self.jnt_st_name_position.keys():
             goal.goal.trajectory.joint_names.append(self.names[i])
-            goal.goal.trajectory.points[0].positions.append(self.jnt_st_name_position[self.names[i]] + deltas[i] ) # This is the line for the deltas to be added in
+            #goal.goal.trajectory.points[0].positions.append(self.jnt_st_name_position[self.names[i]] + deltas[i] ) # This is the line for the deltas to be added in
+            goal.goal.trajectory.points[0].positions.append(self.jnt_st_name_velocity[self.names[i]] + deltas[i] ) # This is the line for the deltas to be added in
          else: 
              return  False
-        goal.goal.trajectory.points[0].time_from_start.secs = 1.0
+        goal.goal.trajectory.points[0].time_from_start = rospy.Duration(0.0025)
         #print('goal: {}'.format(goal.goal))
         self.joint_client.send_goal(goal.goal)
  
@@ -224,7 +259,7 @@ class ForceServer:
 
             # check for convergence
             err = self.control.update_error(self.wrench_at_tip)
-            print 'Current Error Mag.: ' + str(np.sqrt(err))
+            #print 'Current Error Mag.: ' + str(np.sqrt(err))
             #if np.sqrt(err) < 1:
             #    self.state = ForceControl.CONVERGED
             #    return
@@ -236,7 +271,7 @@ class ForceServer:
                 return
 
         elif self.state == ForceControl.CONVERGED:
-            print "CONVERGED!"
+            #print "CONVERGED!"
             self.action_server.set_succeeded()
             self.state = ForceControl.NO_REFERENCE
             # err = self.control.update_error(self.wrench_at_tip)
@@ -251,4 +286,4 @@ if __name__ == '__main__':
     fc = ForceServer('right')
     while not rospy.is_shutdown():
         fc.run()
-        fc.rate.sleep()
+        #fc.rate.sleep()

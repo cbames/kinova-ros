@@ -253,6 +253,7 @@ void KinovaRobot::setPosition(const StateVector& cmd)
     cur_cmd_  = cmd;
 }
 
+
 void KinovaRobot::sendCommand()
 {
     // Do not send trajectory points if the command did not change enough - this
@@ -264,24 +265,32 @@ void KinovaRobot::sendCommand()
     TrajectoryPoint point;
     point.InitStruct();
 
-    point.Position.Delay               = 0.0;
-    point.Position.Type                = ANGULAR_POSITION;
-    point.Position.HandMode            = POSITION_MODE;
+    //point.Position.Delay               = 0.0;
+    point.Position.Type                = ANGULAR_VELOCITY;//ANGULAR_POSITION;
+    point.Position.HandMode            = HAND_NOMOVEMENT;//POSITION_MODE;
 
     const double& j6o = j6_angle_offset_;
-    point.Position.Actuators.Actuator1 =         (180.0 - rad2deg(cur_cmd_[0]));
+/*    point.Position.Actuators.Actuator1 =         (180.0 - rad2deg(cur_cmd_[0]));
     point.Position.Actuators.Actuator2 = clampDeg(270.0 + rad2deg(cur_cmd_[1]));
     point.Position.Actuators.Actuator3 = clampDeg( 90.0 - rad2deg(cur_cmd_[2]));
     point.Position.Actuators.Actuator4 =         (180.0 - rad2deg(cur_cmd_[3]));
     point.Position.Actuators.Actuator5 =         (180.0 - rad2deg(cur_cmd_[4]));
-    point.Position.Actuators.Actuator6 =         (j6o   - rad2deg(cur_cmd_[5]));
+    point.Position.Actuators.Actuator6 =         (j6o   - rad2deg(cur_cmd_[5]));*/
+
+
+    point.Position.Actuators.Actuator1 =        rad2deg(cur_cmd_[0]);
+    point.Position.Actuators.Actuator2 =        rad2deg(cur_cmd_[1]);
+    point.Position.Actuators.Actuator3 =        rad2deg(cur_cmd_[2]);
+    point.Position.Actuators.Actuator4 =        rad2deg(cur_cmd_[3]);
+    point.Position.Actuators.Actuator5 =        rad2deg(cur_cmd_[4]);
+    point.Position.Actuators.Actuator6 =        rad2deg(cur_cmd_[5]);
 
     // TEST: partially closed fingers:
-    point.Position.Fingers.Finger1     = 10.0; //cur_cmd_[6];
+/*    point.Position.Fingers.Finger1     = 10.0; //cur_cmd_[6];
     point.Position.Fingers.Finger2     = 10.0; //cur_cmd_[7];
     if (numFingers() >= 3) {
         point.Position.Fingers.Finger3 = 10.0; //cur_cmd_[8];
-    }
+    }*/
 
     EraseAllTrajectories();
     //SetAngularControl(); // TODO: Make sure this is necessary.

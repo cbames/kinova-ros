@@ -31,7 +31,7 @@ class ForceControl:
         self.goal = np.mat(np.zeros(6)).T
         self.error = np.mat(np.zeros(6)).T
         self.jnt_to_jac = kdl.ChainJntToJacSolver(self.chain)
-        self.k = 0.004#159
+        self.k = 0.008#159
 
     def update_jnts(self, data):
         i = 0
@@ -92,31 +92,62 @@ class ForceControl:
         #ns = np.mat(np.eye(self.chain.getNrOfJoints()))-np.linalg.pinv(cj)*cj
         self.jnt_to_jac.JntToJac(self.jnt_pos, self.j)
         npj = self.jac_to_np(self.j)
-        # yay numpy!
-        jac_pinv = None 
 
+        #print "jacobian:", npj
+        # yay numpy!
+        #jac_pinv = None 
+
+        lambda_dls = 0.5
         j_jT = np.dot(npj, npj.T)
 
-        print ("singularity check:",abs(np.linalg.det(j_jT)))
+        #print ("singularity check:"+"{0:0.10f}".format(abs(np.linalg.det(j_jT))))
+
+        #jac_pinv = np.linalg.pinv(npj,rcond=0.05)
+        jac_pinv = npj.T*np.linalg.inv(j_jT + lambda_dls*lambda_dls*np.identity(j_jT.shape[0]))
 
         # singularity check 
-        if abs(np.linalg.det(j_jT)) > .005**2:
+        #if abs(np.linalg.det(j_jT)) > .001:
             # if we're not near a singularity
-            jac_pinv = np.linalg.pinv(npj)
-        else:
+        #    jac_pinv = np.linalg.pinv(npj)
+        #else:
             # in the case that the robot is entering near singularity
-            u,s,v = np.linalg.svd(j_jT)
-            for i in range(len(s)):
-                if s[i] < .005: s[i] = 0
-                else: s[i] = 1.0
-                print ("s["+i+"]:", s[i])
-            jac_pinv = np.linalg.pinv(npj)*np.diag(s)
+        #    u,s,v = np.linalg.svd(npj)
+        #    for i in range(len(s)):
+         #       print ("before s["+str(i)+"]:", s[i])
+        #        if s[i] < .05: s[i] = 0
+                #else: s[i] = 1.0
+         #       print ("after s["+str(i)+"]:", s[i])
+
+        #    fixedJ = u*np.diag(s)*v
+        #    jac_pinv = np.linalg.pinv(fixedJ)
+            #jac_pinv = np.linalg.pinv(npj)*np.diag(s)
+
+        #correction_vector = np.matrix(np.ones(6, dtype=np.float))
+        #correction_vector[0] = -1.0
+        #correction_vector[2] = -1.0
+        #print("corrVec: ", correction_vector)
+
+
+        # lp = 0
+        # for err in self.error:
+        #    if lp == 0 or lp == 2:
+        #        self.error[lp] = err * -1.0
+        #    lp = lp+1
 
 
         #jac_t = npj.T
-        #jac_t = 
+        #jac_t = np.linalg.pinv(npj)
         deltas = self.k*jac_pinv*self.error
-        #print("joint_deltas:",deltas)
+
+        lp = 0
+        for delta in deltas:
+           if lp == 0 or lp == 2:
+               deltas[lp] = delta * -1.0
+           lp = lp+1
+
+
+        print("joint_deltas:",deltas)
+        #print("error:", self.error)
         #return np.linalg.pinv(cj)*error# + ns*deltas
 
         return deltas
