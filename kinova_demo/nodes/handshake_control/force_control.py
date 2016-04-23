@@ -31,7 +31,7 @@ class ForceControl:
         self.goal = np.mat(np.zeros(6)).T
         self.error = np.mat(np.zeros(6)).T
         self.jnt_to_jac = kdl.ChainJntToJacSolver(self.chain)
-        self.k = 0.008#159
+        self.k = 0.018
 
     def update_jnts(self, data):
         i = 0
@@ -105,48 +105,23 @@ class ForceControl:
         #jac_pinv = np.linalg.pinv(npj,rcond=0.05)
         jac_pinv = npj.T*np.linalg.inv(j_jT + lambda_dls*lambda_dls*np.identity(j_jT.shape[0]))
 
-        # singularity check 
-        #if abs(np.linalg.det(j_jT)) > .001:
-            # if we're not near a singularity
-        #    jac_pinv = np.linalg.pinv(npj)
-        #else:
-            # in the case that the robot is entering near singularity
-        #    u,s,v = np.linalg.svd(npj)
-        #    for i in range(len(s)):
-         #       print ("before s["+str(i)+"]:", s[i])
-        #        if s[i] < .05: s[i] = 0
-                #else: s[i] = 1.0
-         #       print ("after s["+str(i)+"]:", s[i])
 
-        #    fixedJ = u*np.diag(s)*v
-        #    jac_pinv = np.linalg.pinv(fixedJ)
-            #jac_pinv = np.linalg.pinv(npj)*np.diag(s)
-
-        #correction_vector = np.matrix(np.ones(6, dtype=np.float))
-        #correction_vector[0] = -1.0
-        #correction_vector[2] = -1.0
-        #print("corrVec: ", correction_vector)
-
-
-        # lp = 0
-        # for err in self.error:
-        #    if lp == 0 or lp == 2:
-        #        self.error[lp] = err * -1.0
-        #    lp = lp+1
-
-
-        #jac_t = npj.T
-        #jac_t = np.linalg.pinv(npj)
         deltas = self.k*jac_pinv*self.error
 
         lp = 0
+        lock_wrist = True
+
         for delta in deltas:
-           if lp == 0 or lp == 2:
-               deltas[lp] = delta * -1.0
-           lp = lp+1
+            
+            if lp == 0 or lp == 2:
+                deltas[lp] = delta * -1.0
+            if (lp == 3 or lp == 4 or lp == 5)  and lock_wrist:
+                deltas[lp] = 0
+
+            lp = lp+1
 
 
-        print("joint_deltas:",deltas)
+        #print("joint_deltas:",deltas)
         #print("error:", self.error)
         #return np.linalg.pinv(cj)*error# + ns*deltas
 

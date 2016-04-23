@@ -103,10 +103,10 @@ if __name__ == '__main__':
     rospy.init_node('handshake_ros_control')
 
     #Now, generate a plan
-    x_0 = [1.58427125612,0.360246865919,-1.85858310683,-1.74453669525,3.1285026842,3.14,-0.00251327412287,-0.00251327412287,-0.0]          #Plan starting at a different point than demo 
+    x_0 = [-1.49572028597,-0.855756026042,-0.32243649715,-1.07337658333,1.51367516971,-3.06146367312,0.0,0.0,0.0]          #Plan starting at a different point than demo 
     x_dot_0 = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]   
     t_0 = 0                
-    goal = [1.58523372254,0.426514835956,-2.06937017658,-1.74572979142,3.11422281444,3.14,-0.00251327412287,-0.00251327412287,-0.0]         #Plan to a different goal than demo
+    goal = [-1.5496200909,-0.301069041667,-0.744972613011,-1.10312646443,1.73977442581,-3.06146367312,0.0,0.0,0.0]         #Plan to a different goal than demo
     goal_thresh = [0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]
     seg_length = -1          #Plan until convergence to goal
     tau = 8       #Desired plan should take twice as long as demo
@@ -122,20 +122,20 @@ if __name__ == '__main__':
 
     goal = control_msgs.msg.FollowJointTrajectoryActionGoal()
 
-    #traj = np.genfromtxt("/home/ubuntu_ros/catkin_ws/src/jaco-ros/kinova_demo/nodes/handshake_control/ben_traj.txt",delimiter=",").tolist()
+    traj = np.genfromtxt("/home/ubuntu_ros/catkin_ws/src/jaco-ros/kinova_demo/nodes/handshake_control/ben_traj.txt",delimiter=",").tolist()
 
 
-    goal.header.stamp = rospy.Time.now()+rospy.Duration(5)
+    goal.header.stamp = rospy.Time.now()+rospy.Duration(6)
     goal.goal_id = 'test'
     goal.goal.trajectory.header.stamp = rospy.Time.now()
     goal.goal.trajectory.joint_names = ['jaco2_joint_1', 'jaco2_joint_2', 'jaco2_joint_3', 'jaco2_joint_4', 'jaco2_joint_5', 'jaco2_joint_6']
     
     
-    for i in range(len(plan.plan.points)):
-    #for i in range(len(traj)):
+    #for i in range(len(plan.plan.points)):
+    for i in range(len(traj)):
         dt = (i+2)*0.025
         goal.goal.trajectory.points.append(trajectory_msgs.msg.JointTrajectoryPoint())
-        goal.goal.trajectory.points[i].positions = list(plan.plan.points[i].positions[0:6])#traj[i][0:6]
+        goal.goal.trajectory.points[i].positions = traj[i][0:6]#list(plan.plan.points[i].positions[0:6])#
         goal.goal.trajectory.points[i].positions[1] = goal.goal.trajectory.points[i].positions[1] - .15
         goal.goal.trajectory.points[i].time_from_start = rospy.Duration(dt)
         #goal.goal.trajectory.points[i].velocities = plan.plan.points[i].velocities[0:6]

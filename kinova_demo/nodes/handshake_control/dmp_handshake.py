@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
     #Create a DMP from a 2-D trajectory
     dims = 9#2                
-    dt = 0.025                
+    dt = 0.01                
     K = 250                 
     D =  np.sqrt(K)      
     num_bases = 20000          
@@ -78,10 +78,10 @@ if __name__ == '__main__':
     makeSetActiveRequest(resp.dmp_list)
 
     #Now, generate a plan
-    x_0 = [-1.65260863548,-2.60054058547,-2.52559417239,3.08328274152,2.42878427202,1.75167583119,0.838176919978,0.839433557039,-0.0]          #Plan starting at a different point than demo 
+    x_0 = [-1.49572028597,-0.855756026042,-0.32243649715,-1.07337658333,1.51367516971,-3.06146367312,0.0,0.0,0.0]          #Plan starting at a different point than demo 
     x_dot_0 = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]   
     t_0 = 0                
-    goal = [-1.64779630339,-2.70771470985,-2.5843064881,-3.03687289847,2.41212406888,1.75167583119,0.838176919978,0.839433557039,-0.0]         #Plan to a different goal than demo
+    goal = [-1.5496200909,-0.301069041667,-0.744972613011,-1.10312646443,1.73977442581,-3.06146367312,0.0,0.0,0.0]       #Plan to a different goal than demo
     goal_thresh = [0.2,0.2]
     seg_length = -1          #Plan until convergence to goal
     tau = resp.tau       #Desired plan should take twice as long as demo

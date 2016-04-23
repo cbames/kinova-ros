@@ -4,14 +4,14 @@ import rosbag
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import WrenchStamped
 
-bag = rosbag.Bag('/home/ubuntu_ros/handshake_demo/ben-april-5.bag')
+bag = rosbag.Bag('/home/ubuntu_ros/handshake_demo/ben-april-22-3.bag')
 
 target = open("ben_traj.txt", 'w')
 
 
-for topic, msg, t in bag.read_messages(topics=['/jaco_arm_driver/out/joint_state']):
+for topic, msg, t in bag.read_messages(topics=['/joint_states']):
     same = True
-    if topic == "/jaco_arm_driver/out/joint_state":
+    if topic == "/joint_states":
         pos_str = ""
         for pos in msg.position:
             pos_str = pos_str + str(pos)+","

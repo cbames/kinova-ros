@@ -16,11 +16,66 @@ from copy import deepcopy
 import socket
 import actionlib
 import control_msgs.msg 
+import math 
+from dmp.srv import *
+from dmp.msg import *
 
 from force_control import ForceControl
 from kinova_demo.msg import ForceAction, ForceGoal
 
 class ForceServer:
+
+    #Learn a DMP from demonstration data
+    def makeLFDRequest(self,dims, traj, dt, K_gain, 
+                       D_gain, num_bases):
+        demotraj = DMPTraj()
+            
+        for i in range(len(traj)):
+            pt = DMPPoint();
+            pt.positions = traj[i]
+            demotraj.points.append(pt)
+            demotraj.times.append(dt*i)
+                
+        k_gains = [K_gain]*dims
+        d_gains = [D_gain]*dims
+            
+
+        print demotraj
+        print "Starting LfD..."
+        rospy.wait_for_service('learn_dmp_from_demo')
+        try:
+            lfd = rospy.ServiceProxy('learn_dmp_from_demo', LearnDMPFromDemo)
+            resp = lfd(demotraj, k_gains, d_gains, num_bases)
+        except rospy.ServiceException, e:
+            print "Service call failed: %s"%e
+        print "LfD done"    
+                
+        return resp;
+
+
+    #Set a DMP as active for planning
+    def makeSetActiveRequest(self,dmp_list):
+        try:
+            sad = rospy.ServiceProxy('set_active_dmp', SetActiveDMP)
+            sad(dmp_list)
+        except rospy.ServiceException, e:
+            print "Service call failed: %s"%e
+
+
+    #Generate a plan from a DMP
+    def makePlanRequest(self,x_0, x_dot_0, t_0, goal, goal_thresh, 
+                        seg_length, tau, dt, integrate_iter):
+        print "Starting DMP planning..."
+        rospy.wait_for_service('get_dmp_plan')
+        try:
+            gdp = rospy.ServiceProxy('get_dmp_plan', GetDMPPlan)
+            resp = gdp(x_0, x_dot_0, t_0, goal, goal_thresh, 
+                       seg_length, tau, dt, integrate_iter)
+        except rospy.ServiceException, e:
+            print "Service call failed: %s"%e
+        print "DMP planning done"   
+                
+        return resp;
 
     def __init__(self, arm):
         """
@@ -49,6 +104,27 @@ class ForceServer:
         self.joint_client.wait_for_server()
         
         self.wrench_at_tip = np.mat(np.zeros(6)).T
+
+        self.force_index = 0 
+        self.force_traj = np.genfromtxt("/home/ubuntu_ros/catkin_ws/src/jaco-ros/kinova_demo/nodes/handshake_control/ben_traj.txt",delimiter=",").tolist()
+
+        #Now, generate a plan
+        # x_0 = [-1.49572028597,-0.505756026042,-0.12243649715,-1.07337658333,1.51367516971,-3.06146367312,0.0,0.0,0.0]          #Plan starting at a different point than demo 
+        # x_dot_0 = [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]   
+        # t_0 = 0                
+        # goal = [-1.5496200909,-0.10433450521,-0.451710138562,-1.10312646443,1.73977442581,-3.06146367312,0.0,0.0,0.0]         #Plan to a different goal than demo
+        # goal_thresh = [0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]
+        # seg_length = -1          #Plan until convergence to goal
+        # tau = 8       #Desired plan should take twice as long as demo
+        # dt = 0.025
+        # integrate_iter = 1       #dt is rather large, so this is > 1  
+        # self.force_traj = self.makePlanRequest(x_0, x_dot_0, t_0, goal, goal_thresh, 
+        #                        seg_length, tau, dt, integrate_iter)
+
+
+
+        self.last_time = rospy.Time.now()
+
         
         # Call action for joint position control instead 
         #self.pub_joint_deltas = rospy.Publisher('/joint_refs', LabeledJointTrajectory, queue_size=1)
@@ -80,6 +156,12 @@ class ForceServer:
         # start action_server
         self.action_server.start()
         print 'Started arm force controller!'
+
+        from dmp.srv import *
+        from dmp.msg import *
+
+
+
 
     def preempt_cb(self):
         self.state = ForceControl.NO_REFERENCE
@@ -211,6 +293,44 @@ class ForceServer:
         self.state = ForceControl.TRANSIENT
         print 'Accepted goal, now sending commands!'
 
+        self.last_time = rospy.Time.now()
+
+
+    def simplify_angle(self,angle):
+
+        previous_rev = math.floor(angle/(2.0*math.pi)) * 2.0*math.pi;
+        next_rev = math.ceil(angle/(2.0*math.pi)) * 2.0*math.pi;
+        
+        if (math.fabs(angle - previous_rev) < math.fabs(angle - next_rev)):
+            return angle - previous_rev;
+
+        return angle - next_rev;
+        
+    def nearest_equivalent(self, desired, current):
+    
+      #calculate current number of revolutions
+      previous_rev = math.floor(current / (2.0*math.pi))
+      next_rev = math.ceil(current / (2.0*math.pi))
+      current_rev = None
+      
+      if (math.fabs(current - previous_rev*2.0*math.pi) < math.fabs(current - next_rev*2.0*math.pi)):
+        current_rev = previous_rev
+      else:
+        current_rev = next_rev
+      
+      #determine closest angle
+      lowVal = (current_rev - 1.0)*2.0*math.pi + desired
+      medVal = current_rev*2.0*math.pi + desired
+      highVal = (current_rev + 1.0)*2.0*math.pi + desired
+      
+      if (math.fabs(current - lowVal) <= math.fabs(current - medVal) and math.fabs(current - lowVal) <= math.fabs(current - highVal)):
+        return lowVal
+      
+      if (math.fabs(current - medVal) <= math.fabs(current - lowVal) and math.fabs(current - medVal) <= math.fabs(current - highVal)):
+        return medVal
+      
+      return highVal
+
     def populate_jnt_command(self, deltas):
         # make a new joint command
 
@@ -222,16 +342,66 @@ class ForceServer:
         #goal.goal.trajectory.joint_names = []
         #goal.goal.trajectory.points[0].positions = []
 
-        #print("deltas:",deltas)
+        mode = 0 # 0 = position, 1 = force, 2 = both 
+
+        dt = 0.001
+        kp = 2
+        num_beginning = 60 
+        if self.force_index < num_beginning: 
+            kp = 2
+
+        if mode == 2: 
+            kp = 0.2
+
+
+        pos_traj_deltas = np.zeros(6)
+
+        if self.force_index < len(self.force_traj):#len(self.force_traj.plan.points):#
+            for i in range(len(self.names)):
+                if self.names[i] in self.jnt_st_name_position.keys():
+                    
+                    current_pos = self.jnt_st_name_position[self.names[i]]
+                    setpoint = self.nearest_equivalent(self.simplify_angle(self.force_traj[self.force_index][i]), current_pos) 
+                    #setpoint = self.nearest_equivalent(self.simplify_angle(self.force_traj.plan.points[self.force_index].positions[i]), current_pos) 
+
+
+                    if i == 0:
+                        pos_traj_deltas[i] = 0 
+                    elif i == 2:
+                        pos_traj_deltas[i] =- kp*(setpoint - current_pos)
+                    elif i == 1 and self.force_index > num_beginning :
+                        pos_traj_deltas[i] = kp*(setpoint +.15 - current_pos)
+                    elif i == 4 or i == 5 or i == 3:
+                        pos_traj_deltas[i] = 0 
+                    else:
+                        pos_traj_deltas[i] = kp*(setpoint - current_pos)
+
+
+            cur_time = rospy.Time.now()
+
+            if cur_time - self.last_time >=rospy.Duration(dt):
+                self.last_time = cur_time
+                self.force_index = self.force_index + 1 
+
+            
+
         #print "velocity:",self.jnt_st_name_velocity
         for i in range(len(self.names)):
          if self.names[i] in self.jnt_st_name_position.keys():
             goal.goal.trajectory.joint_names.append(self.names[i])
+            
             #goal.goal.trajectory.points[0].positions.append(self.jnt_st_name_position[self.names[i]] + deltas[i] ) # This is the line for the deltas to be added in
-            goal.goal.trajectory.points[0].positions.append(self.jnt_st_name_velocity[self.names[i]] + deltas[i] ) # This is the line for the deltas to be added in
+            
+            if mode == 0 or self.force_index < num_beginning:
+                goal.goal.trajectory.points[0].positions.append( pos_traj_deltas[i] ) 
+            elif mode == 1: 
+                goal.goal.trajectory.points[0].positions.append( self.jnt_st_name_velocity[self.names[i]] +  deltas[i]  )
+            else: 
+                goal.goal.trajectory.points[0].positions.append( self.jnt_st_name_velocity[self.names[i]] +  deltas[i] + pos_traj_deltas[i])
+            
          else: 
              return  False
-        goal.goal.trajectory.points[0].time_from_start = rospy.Duration(0.0025)
+        goal.goal.trajectory.points[0].time_from_start = rospy.Duration(0.01)
         #print('goal: {}'.format(goal.goal))
         self.joint_client.send_goal(goal.goal)
  
@@ -259,8 +429,18 @@ class ForceServer:
 
             # check for convergence
             err = self.control.update_error(self.wrench_at_tip)
-            #print 'Current Error Mag.: ' + str(np.sqrt(err))
-            #if np.sqrt(err) < 1:
+            # print 'Current Error Mag.: ' + str(np.sqrt(err))
+            # print 'current goal:' + str(self.goal.wrench.wrench)
+            # if np.sqrt(err) < 5:
+            #    self.goal.wrench.wrench.force.x = 2.0*self.force_traj[self.force_index][0]
+            #    self.goal.wrench.wrench.force.y = 2.0*self.force_traj[self.force_index][1]
+            #    self.goal.wrench.wrench.force.z = 2.0*self.force_traj[self.force_index][2]
+            #    self.goal.wrench.wrench.torque.x = 0#3.0*self.force_traj[self.force_index][3]
+            #    self.goal.wrench.wrench.torque.y = 0#3.0*self.force_traj[self.force_index][4]
+            #    self.goal.wrench.wrench.torque.z = 0#3.0*self.force_traj[self.force_index][5]
+            #    self.force_index = self.force_index + 1 
+
+
             #    self.state = ForceControl.CONVERGED
             #    return
             # compute joint deltas
@@ -286,4 +466,4 @@ if __name__ == '__main__':
     fc = ForceServer('right')
     while not rospy.is_shutdown():
         fc.run()
-        #fc.rate.sleep()
+        fc.rate.sleep()
